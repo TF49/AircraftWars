@@ -1,94 +1,97 @@
 package main;
 
 import data.Data;
-import scenes.About;
-import scenes.Game;
-import scenes.Home;
+import scenes.*;
 import scenes.connector.Scenes;
-import scenes.Recording;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
-public class Canvas extends JPanel implements MouseMotionListener{
-    // 当前界面所使用的场景
+public class Canvas extends JPanel implements MouseMotionListener {
+
+    private static final Map<String, Supplier<Scenes>> SCENES = new HashMap<>();
+
+    static {
+        SCENES.put("Home", Home::new);
+        SCENES.put("About", About::new);
+        SCENES.put("Recording", Recording::new);
+        SCENES.put("Site", Site::new);
+        SCENES.put("Game", Game::new);
+        SCENES.put("GameOver", GameOver::new);
+    }
+
     Scenes nowScenes = null;
 
     public Canvas(JFrame frame) {
-        // 从主界面开始游戏
+        setDoubleBuffered(true);
         switchScenes("Home");
-        // 监听鼠标事件
         frame.addMouseListener(new OnMouseEvent());
         frame.addMouseMotionListener(this);
-        // 键盘事件
         frame.addKeyListener(new OnKeyEvent());
-        // 开始以 Data.FPS 的帧率刷新界面
         new UpdateUI().start();
     }
 
     public void switchScenes(String scenesName) {
-        if (scenesName.equals("Home")) {
-            // 切换到首页
-            nowScenes = new Home();
-        } else if (scenesName.equals("About")) {
-            // 切换到关于作者
-            nowScenes = new About();
-        } else if (scenesName.equals("Recording")) {
-            // 切换到排行榜
-            nowScenes = new Recording();
-        } else if (scenesName.equals("Site")) {
-            // 切换到设置
-            nowScenes = new Recording();
-        } else if(scenesName.equals("Game")) {
-            // 切换到战斗界面
-            nowScenes = new Game();
+        Supplier<Scenes> supplier = SCENES.get(scenesName);
+        if (supplier != null) {
+            nowScenes = supplier.get();
         }
     }
 
-    public void paint(Graphics g) {
-        // 绘制当前场景
-        nowScenes.draw(g);
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (nowScenes != null) {
+            nowScenes.draw(g);
+        }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        nowScenes.onMouse(e.getX(), e.getY(), Scenes.MOUSE_MOVED);
+        if (nowScenes != null) {
+            nowScenes.onMouse(e.getX(), e.getY(), Scenes.MOUSE_MOVED);
+        }
     }
 
     class OnMouseEvent extends MouseAdapter {
-
+        @Override
         public void mousePressed(MouseEvent e) {
-            nowScenes.onMouse(e.getX(), e.getY(), Scenes.MOUSE_DOWN);
+            if (nowScenes != null) nowScenes.onMouse(e.getX(), e.getY(), Scenes.MOUSE_DOWN);
         }
 
+        @Override
         public void mouseReleased(MouseEvent e) {
-            nowScenes.onMouse(e.getX(), e.getY(), Scenes.MOUSE_UP);
+            if (nowScenes != null) nowScenes.onMouse(e.getX(), e.getY(), Scenes.MOUSE_UP);
         }
     }
 
     class OnKeyEvent extends KeyAdapter {
-
+        @Override
         public void keyPressed(KeyEvent e) {
-            nowScenes.onKeyDown(e.getKeyCode());
+            if (nowScenes != null) nowScenes.onKeyDown(e.getKeyCode());
         }
 
+        @Override
         public void keyReleased(KeyEvent e) {
-            nowScenes.onKeyUp(e.getKeyCode());
+            if (nowScenes != null) nowScenes.onKeyUp(e.getKeyCode());
         }
     }
 
     class UpdateUI extends Thread {
+        @Override
         public void run() {
             int sleepTime = 1000 / Data.FPS;
             while (true) {
                 try {
-                    updateUI();
+                    repaint();
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();

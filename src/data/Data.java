@@ -1,13 +1,12 @@
 package data;
 
 import main.Canvas;
-import model.Bullet;
+import service.ConfigService;
 import utils.Load;
 import widget.ScrollBackground;
 import widget.connector.Animation;
 
 import javax.sound.sampled.Clip;
-import java.applet.AudioClip;
 import java.awt.*;
 
 public class Data {
@@ -33,6 +32,10 @@ public class Data {
     public static Image[][] buff;
     // 玩家的生命数 玩家的移动速度
     public static final int LIFE = 3, SPEED = 8;
+    public static final int DIFFICULTY_EASY = 0, DIFFICULTY_NORMAL = 1, DIFFICULTY_HARD = 2;
+    public static int difficulty = DIFFICULTY_NORMAL;
+    public static int bgmVolume = 80;
+    public static int sfxVolume = 80;
     // 玩家的位置
     public static int x, y;
 
@@ -90,10 +93,12 @@ public class Data {
         }
         buff = new Image[][]{
                 {Load.image("道具-双倍子弹.png")},
+                {Load.image("道具-三倍子弹.png")},
                 {Load.image("道具-三倍子弹.png")}
         };
         hpBox = Load.image("BOSS血条.png");
         tips = Load.image("BOSS出现提示.png");
+        ConfigService.load();
         /* 图片全部加载完毕 */
     }
 }

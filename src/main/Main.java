@@ -31,6 +31,7 @@ public class Main {
         // 窗口关闭时结束程序
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // 播放背景音乐
-        Load.sound("background").loop(Clip.LOOP_CONTINUOUSLY);
+        Clip bgm = Load.soundWithVolume("background", Data.bgmVolume);
+        if (bgm != null) bgm.loop(Clip.LOOP_CONTINUOUSLY);
     }
 }

@@ -14,7 +14,8 @@ public class Aircraft {
     public int speed;
     double deg;
     // 飞机的血量，玩家操控的飞机血量为1，碰到就死弱鸡. 飞机的伤害，这个伤害属性在飞机发生碰撞时对敌方造成伤害, chp默认为2， 且后续不打算修改，毕竟撞机不光荣
-    public int hp = 10, chp = 20;
+    public int hp = 10, maxHp = 10, chp = 20;
+    public int shieldCharges = 0;
     // 飞机的buff， 两中buff， 2个子弹发射和三个子弹发射，当同时拥有两种buff时，这个buff将叠加，同时释放5个子弹, 这个属性表示的是buff存在剩余时间，时间<0
     // 时，相应 buff 消失, 因为帧率是固定的，且每帧都会绘制自身，因此，tBuff1时间的减少不采用计时器，直接在draw里面减少即可
     // 他们的单位是秒
@@ -113,6 +114,10 @@ public class Aircraft {
         if ((tBuff2 += buff2) > 30) {
             tBuff2 = 30;
         }
+    }
+
+    public void grantShield() {
+        shieldCharges = 1;
     }
 
     // 获取这个飞机的碰撞区, 返回的是一个包含矩形左上角坐标和高宽的Point数组
