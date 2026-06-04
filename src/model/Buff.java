@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class Buff extends Bullet{
 
-    public static final int BUFF1 = 0, BUFF2 = 1, BUFF3 = 2;
+    public static final int BUFF1 = 0, BUFF2 = 1, BUFF3 = 2, BUFF4 = 3, BUFF5 = 4, BUFF6 = 5, BUFF7 = 6, BUFF8 = 7;
 
     Point m;
 

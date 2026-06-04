@@ -18,42 +18,58 @@ public class CollisionSystem {
     }
 
     public static void update(GameSession session, List<Aircraft> enemy, List<Bullet> bulletPlayer,
-                              List<Bullet> bulletEnemy, List<Bullet> bulletBuff, DeathHandler deathHandler) {
+            List<Bullet> bulletEnemy, List<Bullet> bulletBuff, DeathHandler deathHandler) {
         Random random = new Random();
         purgeBullets(bulletEnemy, bulletPlayer, bulletBuff);
         handleEnemyDeaths(session, enemy, bulletBuff, random);
         handleBossDeath(session, bulletBuff);
         handlePlayerBullets(session, enemy, bulletPlayer);
         handleEnemyBullets(session, bulletEnemy, deathHandler);
-        handleBuffPickup(session, bulletBuff);
+        handleBuffPickup(session, bulletBuff, enemy);
         handlePlaneCollision(session, enemy, deathHandler);
         tickCombo(session);
     }
 
     static void purgeBullets(List<Bullet> bulletEnemy, List<Bullet> bulletPlayer, List<Bullet> bulletBuff) {
-        for (int i = 0; i < bulletEnemy.size(); ) {
-            if (bulletEnemy.get(i).isRemove()) bulletEnemy.remove(i);
-            else i++;
+        for (int i = 0; i < bulletEnemy.size();) {
+            if (bulletEnemy.get(i).isRemove())
+                bulletEnemy.remove(i);
+            else
+                i++;
         }
-        for (int i = 0; i < bulletPlayer.size(); ) {
-            if (bulletPlayer.get(i).isRemove()) bulletPlayer.remove(i);
-            else i++;
+        for (int i = 0; i < bulletPlayer.size();) {
+            if (bulletPlayer.get(i).isRemove())
+                bulletPlayer.remove(i);
+            else
+                i++;
         }
-        for (int i = 0; i < bulletBuff.size(); ) {
-            if (bulletBuff.get(i).isRemove()) bulletBuff.remove(i);
-            else i++;
+        for (int i = 0; i < bulletBuff.size();) {
+            if (bulletBuff.get(i).isRemove())
+                bulletBuff.remove(i);
+            else
+                i++;
         }
     }
 
     static void handleEnemyDeaths(GameSession session, List<Aircraft> enemy, List<Bullet> bulletBuff, Random random) {
         Aircraft boss = session.boss;
-        for (int i = 0; i < enemy.size(); ) {
+        for (int i = 0; i < enemy.size();) {
             if (enemy.get(i).isRemove()) {
                 if (random.nextInt(100) > 80) {
                     int roll = random.nextInt(100);
-                    if (roll < 5) {
+                    if (roll < 3) {
+                        bulletBuff.add(new Buff(Buff.BUFF6, enemy.get(i).x, enemy.get(i).y));
+                    } else if (roll < 6) {
+                        bulletBuff.add(new Buff(Buff.BUFF5, enemy.get(i).x, enemy.get(i).y));
+                    } else if (roll < 9) {
+                        bulletBuff.add(new Buff(Buff.BUFF7, enemy.get(i).x, enemy.get(i).y));
+                    } else if (roll < 12) {
+                        bulletBuff.add(new Buff(Buff.BUFF8, enemy.get(i).x, enemy.get(i).y));
+                    } else if (roll < 15) {
+                        bulletBuff.add(new Buff(Buff.BUFF4, enemy.get(i).x, enemy.get(i).y));
+                    } else if (roll < 20) {
                         bulletBuff.add(new Buff(Buff.BUFF3, enemy.get(i).x, enemy.get(i).y));
-                    } else if (roll > 60) {
+                    } else if (roll > 65) {
                         bulletBuff.add(new Buff(Buff.BUFF2, enemy.get(i).x, enemy.get(i).y));
                     } else {
                         bulletBuff.add(new Buff(Buff.BUFF1, enemy.get(i).x, enemy.get(i).y));
@@ -68,7 +84,8 @@ public class CollisionSystem {
                     session.startBossTips();
                 }
                 enemy.remove(i);
-            } else i++;
+            } else
+                i++;
         }
     }
 
@@ -81,23 +98,29 @@ public class CollisionSystem {
             bulletBuff.add(new Buff(Buff.BUFF1, cx, cy));
             bulletBuff.add(new Buff(Buff.BUFF3, cx, cy));
             bulletBuff.add(new Buff(Buff.BUFF1, cx, cy));
+            bulletBuff.add(new Buff(Buff.BUFF5, cx, cy));
+            bulletBuff.add(new Buff(Buff.BUFF4, cx, cy));
             session.boss = null;
         }
     }
 
     static void handlePlayerBullets(GameSession session, List<Aircraft> enemy, List<Bullet> bulletPlayer) {
         Aircraft boss = session.boss;
+        Aircraft player = session.player;
         boolean isPlay = false;
+        int damageBonus = (player != null) ? player.getDamageBonus() : 0;
         for (int i = 0; i < bulletPlayer.size(); i++) {
             Point point = bulletPlayer.get(i).getPoint();
-            if (bulletPlayer.get(i).buffetIndex > 1) continue;
+            if (bulletPlayer.get(i).buffetIndex > 1)
+                continue;
             if (boss != null && boss.hp > 0) {
                 Point[] rect = boss.getCollisionRect();
                 if (Rect.isInternal(point.x, point.y, rect[0].x, rect[0].y, rect[1].x, rect[1].y)) {
-                    boss.hp -= bulletPlayer.get(i).struts;
+                    boss.hp -= (bulletPlayer.get(i).struts + damageBonus);
                     bulletPlayer.get(i).buffetIndex = 1;
                     bulletPlayer.get(i).speed = 5;
-                    if (boss.hp <= 0) boss.imgIndex = 10;
+                    if (boss.hp <= 0)
+                        boss.imgIndex = 10;
                     if (!isPlay) {
                         isPlay = true;
                         Load.playSound("击中");
@@ -107,13 +130,14 @@ public class CollisionSystem {
             }
             for (Aircraft a : enemy) {
                 Point[] rect = a.getCollisionRect();
-                if (a.hp < 0) continue;
+                if (a.hp < 0)
+                    continue;
                 if (Rect.isInternal(point.x, point.y, rect[0].x, rect[0].y, rect[1].x, rect[1].y)) {
                     if (!isPlay) {
                         isPlay = true;
                         Load.playSound("击中");
                     }
-                    a.hp -= bulletPlayer.get(i).struts;
+                    a.hp -= (bulletPlayer.get(i).struts + damageBonus);
                     bulletPlayer.get(i).buffetIndex = 1;
                     bulletPlayer.get(i).speed = 5;
                     if (a.hp < 0) {
@@ -128,12 +152,14 @@ public class CollisionSystem {
 
     static void handleEnemyBullets(GameSession session, List<Bullet> bulletEnemy, DeathHandler deathHandler) {
         Aircraft player = session.player;
-        if (player == null || player.hp <= 0 || session.invincibleFrames > 0) return;
+        if (player == null || player.hp <= 0 || session.invincibleFrames > 0 || player.isInvincible())
+            return;
         Point[] rect = player.getCollisionRect();
         for (Bullet b : bulletEnemy) {
             Point point = b.getPoint();
             if (Rect.isInternal(point.x, point.y, rect[0].x, rect[0].y, rect[1].x, rect[1].y)) {
-                if (consumeShield(player)) continue;
+                if (consumeShield(player))
+                    continue;
                 player.hp -= b.struts;
                 player.kill();
                 deathHandler.onPlayerDeath();
@@ -142,29 +168,45 @@ public class CollisionSystem {
         }
     }
 
-    static void handleBuffPickup(GameSession session, List<Bullet> bulletBuff) {
+    static void handleBuffPickup(GameSession session, List<Bullet> bulletBuff, List<Aircraft> enemy) {
         Aircraft player = session.player;
-        if (player == null || player.hp <= 0) return;
+        if (player == null || player.hp <= 0)
+            return;
         Point[] rect = player.getCollisionRect();
         for (Bullet buff : bulletBuff) {
             Point p = buff.getPoint();
             if (Rect.isInternal(p.x, p.y, rect[0].x, rect[0].y, rect[1].x, rect[1].y)) {
                 buff.x = -100;
-                if (buff.struts == Buff.BUFF1) player.setBuff(16, 0);
-                else if (buff.struts == Buff.BUFF2) player.setBuff(0, 16);
-                else if (buff.struts == Buff.BUFF3) player.grantShield();
+                if (buff.struts == Buff.BUFF1)
+                    player.setBuff(16, 0);
+                else if (buff.struts == Buff.BUFF2)
+                    player.setBuff(0, 16);
+                else if (buff.struts == Buff.BUFF3)
+                    player.grantShield();
+                else if (buff.struts == Buff.BUFF4)
+                    player.restoreHealth();
+                else if (buff.struts == Buff.BUFF5)
+                    player.boostDamage(10);
+                else if (buff.struts == Buff.BUFF6)
+                    clearAllEnemies(session, enemy);
+                else if (buff.struts == Buff.BUFF7)
+                    player.setInvincible(5);
+                else if (buff.struts == Buff.BUFF8)
+                    player.setSlowEnemies(8);
             }
         }
     }
 
     static void handlePlaneCollision(GameSession session, List<Aircraft> enemy, DeathHandler deathHandler) {
         Aircraft player = session.player;
-        if (player == null || session.invincibleFrames > 0) return;
+        if (player == null || session.invincibleFrames > 0 || player.isInvincible())
+            return;
         for (Aircraft air : enemy) {
             int cx = air.x + air.width / 2;
             int cy = air.y + air.height / 2;
             if (Rect.isInternal(cx, cy, player.x, player.y, player.width, player.height)) {
-                if (consumeShield(player)) return;
+                if (consumeShield(player))
+                    return;
                 player.kill();
                 air.kill();
                 Load.playSound("失败");
@@ -185,14 +227,26 @@ public class CollisionSystem {
     static void addScore(GameSession session, int base) {
         session.comboTimer = Data.FPS * 3;
         session.combo = Math.min(3, session.combo + 1);
-        if (session.combo > session.maxCombo) session.maxCombo = session.combo;
+        if (session.combo > session.maxCombo)
+            session.maxCombo = session.combo;
         session.fraction += base * session.combo;
     }
 
     static void tickCombo(GameSession session) {
         if (session.comboTimer > 0) {
             session.comboTimer--;
-            if (session.comboTimer == 0) session.combo = 0;
+            if (session.comboTimer == 0)
+                session.combo = 0;
         }
+    }
+
+    static void clearAllEnemies(GameSession session, List<Aircraft> enemy) {
+        for (Aircraft aircraft : enemy) {
+            if (aircraft.hp > 0) {
+                aircraft.kill();
+                addScore(session, 10);
+            }
+        }
+        Load.playSound("击中");
     }
 }

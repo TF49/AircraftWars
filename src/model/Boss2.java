@@ -1,6 +1,7 @@
 package model;
 
 import data.Data;
+import engine.GameSession;
 import utils.Rect;
 
 import java.awt.*;
@@ -11,6 +12,7 @@ public class Boss2 extends Aircraft {
     double lastTime = 0;
     int freezeFrames = 0;
     int checkpoint;
+    private int originalSpeed;
 
     public Boss2(int checkpoint) {
         super(Data.bossAircraftImages[1], Data.bossDeathImages[1], 2, 90,
@@ -18,6 +20,7 @@ public class Boss2 extends Aircraft {
         this.checkpoint = checkpoint;
         maxHp = hp = 300 + checkpoint * 50;
         speed = 2;
+        originalSpeed = 2;
         lastTime = -1;
     }
 
@@ -31,24 +34,36 @@ public class Boss2 extends Aircraft {
             freezeFrames--;
             return;
         }
+        // 检查是否需要减速（通过GameSession获取玩家状态）
+        if (GameSession.current != null && GameSession.current.player != null
+                && GameSession.current.player.isSlowingEnemies()) {
+            speed = originalSpeed / 2;
+        } else {
+            speed = originalSpeed;
+        }
         Random random = new Random();
         boolean left = x < 0, right = x > Data.WIDTH - width, up = y < 0, down = y > Data.HEIGHT / 2 - height;
-        if (left) deg = random.nextInt(20) - 9.5;
-        if (right) deg = random.nextInt(20) - 9.5 + 180;
-        if (up) deg = random.nextInt(40) - 19.5 + 90;
-        if (down) deg = random.nextInt(40) - 19.5 + 270;
+        if (left)
+            deg = random.nextInt(20) - 9.5;
+        if (right)
+            deg = random.nextInt(20) - 9.5 + 180;
+        if (up)
+            deg = random.nextInt(40) - 19.5 + 90;
+        if (down)
+            deg = random.nextInt(40) - 19.5 + 270;
         super.move();
     }
 
     @Override
     public Bullet[] attack() {
         if (lifeTime - lastTime <= 3 || hp <= 10) {
-            return new Bullet[]{};
+            return new Bullet[] {};
         }
         lastTime = lifeTime;
         Random random = new Random();
         int rn = random.nextInt(100);
-        if (rn < 20) return new Bullet[]{};
+        if (rn < 20)
+            return new Bullet[] {};
 
         int bx = Data.WIDTH / 2;
         int by = x + height;
@@ -72,8 +87,8 @@ public class Boss2 extends Aircraft {
                 bs[i * 6 + 3] = new BossBullet1(100, bx + 100, by - height * 2, 0, i * 10);
                 bs[i * 6 + 4] = new BossBullet1(100, bx + 200, by + 30 - height * 2, 0, i * 10);
                 bs[i * 6 + 5] = new BossBullet1(100, bx + 300, by - height * 2, 0, i * 10);
-                bs[i * 6].speed = bs[i * 6 + 1].speed = bs[i * 6 + 2].speed =
-                        bs[i * 6 + 3].speed = bs[i * 6 + 4].speed = bs[i * 6 + 5].speed = 10;
+                bs[i * 6].speed = bs[i * 6 + 1].speed = bs[i * 6
+                        + 2].speed = bs[i * 6 + 3].speed = bs[i * 6 + 4].speed = bs[i * 6 + 5].speed = 10;
             }
             return bs;
         } else {
